@@ -11,7 +11,9 @@ app.use(cors());
 app.use(express.json());
 
 // Connect to MongoDB
-connectDB();
+if (process.env.NODE_ENV !== "test") {
+  connectDB();
+}
 
 // Routes
 app.use("/auth", authRoutes);
@@ -45,6 +47,10 @@ app.use((err, req, res, next) => {
 
 // Start server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`✅ Server running on http://localhost:${PORT}`);
-});
+if (process.env.NODE_ENV !== "test") {
+  app.listen(PORT, () => {
+    console.log(`✅ Server running on http://localhost:${PORT}`);
+  });
+}
+
+module.exports = app;
