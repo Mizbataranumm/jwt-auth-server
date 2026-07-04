@@ -31,8 +31,8 @@ const authorize = (...roles) => {
 // Rate limiter for login attempts
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // 5 attempts
-  message: "Too many login attempts, try again later",
+  max: 20, // 20 attempts per window
+  message: { error: "Too many login attempts, please try again in 15 minutes" },
   standardHeaders: true,
   legacyHeaders: false,
 });
@@ -40,8 +40,8 @@ const loginLimiter = rateLimit({
 // Rate limiter for registration
 const registerLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
-  max: 3, // 3 registrations per IP
-  message: "Too many accounts created, try again later",
+  max: 15, // 15 registrations per IP per hour
+  message: { error: "Too many accounts created, please try again later" },
 });
 
 module.exports = {
