@@ -18,20 +18,12 @@ if (process.env.NODE_ENV !== "test") {
 // Routes
 app.use("/auth", authRoutes);
 
-// Health check
-app.get("/", (req, res) => {
-  res.json({
-    message: "JWT & OAuth2 Authorization Server",
-    status: "running",
-    endpoints: {
-      register: "POST /auth/register",
-      login: "POST /auth/login",
-      refreshToken: "POST /auth/refresh-token",
-      profile: "GET /auth/profile",
-      logout: "POST /auth/logout",
-      loginHistory: "GET /auth/login-history",
-    },
-  });
+// Serve static frontend documentation
+app.use(express.static("public"));
+
+// Health check JSON endpoint for automated monitoring
+app.get("/health", (req, res) => {
+  res.json({ status: "running" });
 });
 
 // 404 handler
