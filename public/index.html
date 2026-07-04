@@ -3,281 +3,462 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>JWT Authentication Server API</title>
+  <title>JWT Authentication Server — Live Demo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
-      --card-bg: rgba(255, 255, 255, 0.05);
-      --card-border: rgba(255, 255, 255, 0.1);
+      --bg: #0f172a;
+      --surface: rgba(255,255,255,0.05);
+      --border: rgba(255,255,255,0.1);
       --primary: #8b5cf6;
-      --secondary: #3b82f6;
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
-    }
-    
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      --primary-glow: rgba(139,92,246,0.3);
+      --blue: #3b82f6;
+      --green: #10b981;
+      --red: #ef4444;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --card-shadow: 0 25px 50px -12px rgba(0,0,0,0.6);
     }
 
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
-      background: var(--bg-gradient);
-      color: var(--text-main);
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
       min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 4rem 2rem;
-      position: relative;
       overflow-x: hidden;
     }
 
-    /* Ambient Background Orbs */
-    .orb {
-      position: absolute;
+    /* BACKGROUND */
+    .bg-orb {
+      position: fixed;
       border-radius: 50%;
-      filter: blur(100px);
+      filter: blur(120px);
+      pointer-events: none;
       z-index: 0;
-      animation: float 10s infinite alternate ease-in-out;
     }
-    .orb-1 {
-      top: -100px;
-      left: -100px;
-      width: 400px;
-      height: 400px;
-      background: rgba(139, 92, 246, 0.3);
-    }
-    .orb-2 {
-      bottom: -150px;
-      right: -50px;
-      width: 500px;
-      height: 500px;
-      background: rgba(59, 130, 246, 0.2);
-    }
+    .orb1 { top: -150px; left: -100px; width: 500px; height: 500px; background: rgba(139,92,246,0.25); animation: drift 12s ease-in-out infinite alternate; }
+    .orb2 { bottom: -100px; right: -100px; width: 600px; height: 600px; background: rgba(59,130,246,0.15); animation: drift 15s ease-in-out infinite alternate-reverse; }
+    @keyframes drift { from { transform: translate(0,0); } to { transform: translate(40px, 40px); } }
 
-    @keyframes float {
-      0% { transform: translateY(0) scale(1); }
-      100% { transform: translateY(50px) scale(1.1); }
-    }
+    /* LAYOUT */
+    .page { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 3rem 1.5rem 5rem; }
 
-    .container {
-      max-width: 800px;
-      width: 100%;
-      z-index: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 2rem;
-    }
+    /* HERO */
+    .hero { text-align: center; margin-bottom: 3.5rem; animation: slideDown 0.8s ease-out; }
+    @keyframes slideDown { from { opacity:0; transform:translateY(-25px); } to { opacity:1; transform:translateY(0); } }
 
-    header {
-      text-align: center;
-      margin-bottom: 2rem;
-      animation: slideDown 0.8s ease-out;
-    }
-
-    @keyframes slideDown {
-      from { opacity: 0; transform: translateY(-30px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    h1 {
-      font-size: 3.5rem;
-      font-weight: 800;
-      background: linear-gradient(to right, #c084fc, #60a5fa);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      margin-bottom: 1rem;
-      letter-spacing: -1px;
-    }
-
-    p.subtitle {
-      font-size: 1.2rem;
-      color: var(--text-muted);
-      line-height: 1.6;
-    }
-
-    .glass-card {
-      background: var(--card-bg);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid var(--card-border);
-      border-radius: 24px;
-      padding: 2.5rem;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-      animation: fadeIn 1s ease-out 0.3s both;
-      transition: transform 0.3s ease, border-color 0.3s ease;
-    }
-
-    .glass-card:hover {
-      transform: translateY(-5px);
-      border-color: rgba(255, 255, 255, 0.2);
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: scale(0.95); }
-      to { opacity: 1; transform: scale(1); }
-    }
-
-    .status-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      background: rgba(16, 185, 129, 0.1);
-      color: #34d399;
-      padding: 0.5rem 1rem;
-      border-radius: 9999px;
-      font-weight: 600;
-      font-size: 0.9rem;
-      border: 1px solid rgba(16, 185, 129, 0.2);
-      margin-bottom: 2rem;
-    }
-
-    .status-dot {
-      width: 8px;
-      height: 8px;
-      background: #34d399;
-      border-radius: 50%;
-      box-shadow: 0 0 10px #34d399;
-      animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-      0% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7); }
-      70% { box-shadow: 0 0 0 10px rgba(52, 211, 153, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
-    }
-
-    h2 {
-      font-size: 1.5rem;
+    .badge {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: rgba(16,185,129,0.1); color: #34d399;
+      border: 1px solid rgba(16,185,129,0.25); border-radius: 9999px;
+      padding: 0.4rem 1rem; font-size: 0.85rem; font-weight: 600;
       margin-bottom: 1.5rem;
-      color: #fff;
     }
+    .pulse { width: 8px; height: 8px; background: #34d399; border-radius: 50%; animation: pulse 2s infinite; }
+    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(52,211,153,0.7); } 70% { box-shadow: 0 0 0 8px rgba(52,211,153,0); } 100% { box-shadow: 0 0 0 0 rgba(52,211,153,0); } }
 
-    .endpoint-list {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
+    h1 { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 800; letter-spacing: -1px; background: linear-gradient(135deg, #c084fc, #60a5fa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 1rem; }
+    .hero p { color: var(--muted); font-size: 1.1rem; line-height: 1.7; max-width: 600px; margin: 0 auto 1.5rem; }
 
-    .endpoint {
-      display: flex;
-      align-items: center;
-      background: rgba(0, 0, 0, 0.2);
-      padding: 1rem;
-      border-radius: 12px;
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      transition: all 0.2s ease;
-    }
-    
-    .endpoint:hover {
-      background: rgba(255, 255, 255, 0.05);
-      border-color: rgba(255,255,255,0.1);
-    }
+    .pills { display: flex; flex-wrap: wrap; gap: 0.6rem; justify-content: center; }
+    .pill { background: var(--surface); border: 1px solid var(--border); border-radius: 9999px; padding: 0.35rem 1rem; font-size: 0.85rem; color: var(--muted); }
 
-    .method {
-      font-weight: 700;
-      font-size: 0.85rem;
-      padding: 0.25rem 0.75rem;
-      border-radius: 6px;
-      margin-right: 1rem;
-      letter-spacing: 0.5px;
+    /* TABS */
+    .tabs { display: flex; gap: 0.5rem; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 6px; margin-bottom: 1.5rem; overflow-x: auto; }
+    .tab-btn {
+      flex: 1; min-width: fit-content; padding: 0.6rem 1.2rem; border-radius: 10px;
+      border: none; background: none; color: var(--muted);
+      font-family: inherit; font-size: 0.9rem; font-weight: 600;
+      cursor: pointer; transition: all 0.2s; white-space: nowrap;
     }
+    .tab-btn.active { background: var(--primary); color: #fff; box-shadow: 0 0 20px var(--primary-glow); }
+    .tab-btn:hover:not(.active) { color: var(--text); background: rgba(255,255,255,0.05); }
 
-    .method.post { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
-    .method.get { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+    /* PANEL */
+    .panel { display: none; animation: fadeIn 0.4s ease-out; }
+    .panel.active { display: block; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
 
-    .path {
-      font-family: monospace;
-      font-size: 1rem;
-      color: #e2e8f0;
-      flex: 1;
+    /* CARD */
+    .card {
+      background: var(--surface); backdrop-filter: blur(20px);
+      border: 1px solid var(--border); border-radius: 20px;
+      padding: 2rem; box-shadow: var(--card-shadow);
+      transition: border-color 0.3s;
     }
+    .card:hover { border-color: rgba(255,255,255,0.18); }
+    .card h2 { font-size: 1.25rem; margin-bottom: 0.4rem; }
+    .card .desc { color: var(--muted); font-size: 0.9rem; margin-bottom: 1.5rem; }
 
-    .description {
-      font-size: 0.9rem;
-      color: var(--text-muted);
+    /* FORM */
+    .form-group { margin-bottom: 1rem; }
+    label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--muted); margin-bottom: 0.4rem; }
+    input, select {
+      width: 100%; padding: 0.75rem 1rem;
+      background: rgba(0,0,0,0.3); border: 1px solid var(--border);
+      border-radius: 10px; color: var(--text);
+      font-family: inherit; font-size: 0.95rem;
+      transition: border-color 0.2s, box-shadow 0.2s; outline: none;
     }
-    
-    .tech-stack {
-      display: flex;
-      gap: 1rem;
-      margin-top: 2rem;
-      flex-wrap: wrap;
-      justify-content: center;
+    input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-glow); }
+
+    /* BUTTON */
+    .btn {
+      width: 100%; padding: 0.85rem;
+      background: linear-gradient(135deg, var(--primary), var(--blue));
+      border: none; border-radius: 10px; color: #fff;
+      font-family: inherit; font-size: 1rem; font-weight: 700;
+      cursor: pointer; transition: all 0.2s; margin-top: 0.5rem;
+      position: relative; overflow: hidden;
     }
-    
-    .tech-pill {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255,255,255,0.1);
-      padding: 0.5rem 1.25rem;
-      border-radius: 9999px;
-      font-size: 0.9rem;
-      font-weight: 500;
-      color: #cbd5e1;
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 30px var(--primary-glow); }
+    .btn:active { transform: translateY(0); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .btn.loading::after { content: ''; position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: translateY(-50%) rotate(360deg); } }
+
+    .btn-secondary {
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--text);
     }
+    .btn-secondary:hover { background: rgba(255,255,255,0.1); box-shadow: none; }
+
+    /* RESPONSE BOX */
+    .response-box { margin-top: 1.5rem; }
+    .response-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.6rem; }
+    .response-header span { font-size: 0.85rem; font-weight: 600; color: var(--muted); }
+    .status-tag { padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.8rem; font-weight: 700; }
+    .status-ok { background: rgba(16,185,129,0.2); color: #34d399; }
+    .status-err { background: rgba(239,68,68,0.2); color: #f87171; }
+    .status-warn { background: rgba(245,158,11,0.2); color: #fbbf24; }
+
+    pre {
+      background: rgba(0,0,0,0.4); border: 1px solid var(--border);
+      border-radius: 12px; padding: 1.2rem; overflow-x: auto;
+      font-size: 0.85rem; line-height: 1.6; color: #e2e8f0;
+      max-height: 320px; overflow-y: auto;
+    }
+    .token-display { word-break: break-all; color: #a78bfa; font-family: monospace; font-size: 0.8rem; }
+
+    /* INFO BOX */
+    .info-box { background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2); border-radius: 12px; padding: 1rem; margin-bottom: 1.5rem; font-size: 0.875rem; color: #93c5fd; line-height: 1.6; }
+    .success-box { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.2); border-radius: 12px; padding: 1rem; margin-bottom: 1.5rem; font-size: 0.875rem; color: #6ee7b7; line-height: 1.6; }
+
+    /* TWO COL */
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    @media (max-width: 640px) { .two-col { grid-template-columns: 1fr; } }
+
+    /* ENDPOINTS LIST */
+    .endpoint-item {
+      display: flex; align-items: center; gap: 1rem;
+      background: rgba(0,0,0,0.2); padding: 0.9rem 1.1rem;
+      border-radius: 12px; border: 1px solid var(--border);
+      margin-bottom: 0.75rem; transition: all 0.2s;
+    }
+    .endpoint-item:hover { background: rgba(255,255,255,0.05); }
+    .method-tag { font-weight: 700; font-size: 0.8rem; padding: 0.2rem 0.7rem; border-radius: 6px; min-width: 52px; text-align: center; }
+    .tag-post { background: rgba(59,130,246,0.2); color: #60a5fa; }
+    .tag-get { background: rgba(16,185,129,0.2); color: #34d399; }
+    .ep-path { font-family: monospace; font-size: 0.95rem; flex: 1; }
+    .ep-desc { font-size: 0.85rem; color: var(--muted); }
+    .lock-icon { font-size: 0.8rem; color: #fbbf24; }
   </style>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
-  <div class="orb orb-1"></div>
-  <div class="orb orb-2"></div>
-  
-  <div class="container">
-    <header>
-      <h1>Authentication API</h1>
-      <p class="subtitle">Production-ready JWT & OAuth2 service featuring robust token rotation, rate limiting, and RBAC.</p>
-      
-      <div class="tech-stack">
-        <span class="tech-pill">Node.js</span>
-        <span class="tech-pill">Express</span>
-        <span class="tech-pill">MongoDB</span>
-        <span class="tech-pill">JWT</span>
-        <span class="tech-pill">Bcrypt</span>
-      </div>
-    </header>
+  <div class="bg-orb orb1"></div>
+  <div class="bg-orb orb2"></div>
 
-    <div class="glass-card">
-      <div class="status-badge">
-        <div class="status-dot"></div>
-        System Online & Ready
+  <div class="page">
+    <!-- HERO -->
+    <div class="hero">
+      <div class="badge"><div class="pulse"></div> Server Online</div>
+      <h1>JWT Auth Server</h1>
+      <p>Enterprise-grade authentication API. Test register, login, token refresh and protected routes live below.</p>
+      <div class="pills">
+        <span class="pill">Node.js</span>
+        <span class="pill">Express</span>
+        <span class="pill">MongoDB</span>
+        <span class="pill">JWT</span>
+        <span class="pill">Bcrypt</span>
+        <span class="pill">RBAC</span>
       </div>
-      
-      <h2>Available Endpoints</h2>
-      <div class="endpoint-list">
-        <div class="endpoint">
-          <span class="method post">POST</span>
-          <span class="path">/auth/register</span>
-          <span class="description">Create a new user account</span>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('register')">📝 Register</button>
+      <button class="tab-btn" onclick="switchTab('login')">🔐 Login</button>
+      <button class="tab-btn" onclick="switchTab('profile')">👤 Profile</button>
+      <button class="tab-btn" onclick="switchTab('refresh')">🔄 Refresh Token</button>
+      <button class="tab-btn" onclick="switchTab('endpoints')">📋 Endpoints</button>
+    </div>
+
+    <!-- REGISTER PANEL -->
+    <div id="panel-register" class="panel active">
+      <div class="card">
+        <h2>Create an Account</h2>
+        <p class="desc">Register a new user. Your password is hashed with bcrypt before being saved.</p>
+        <div class="two-col">
+          <div>
+            <div class="form-group">
+              <label>Email Address</label>
+              <input type="email" id="reg-email" placeholder="you@example.com" value="demo@example.com" />
+            </div>
+            <div class="form-group">
+              <label>Password</label>
+              <input type="password" id="reg-password" placeholder="min 6 characters" value="demo1234" />
+            </div>
+            <button class="btn" id="reg-btn" onclick="doRegister()">Register User</button>
+          </div>
+          <div>
+            <div class="response-box">
+              <div class="response-header">
+                <span>API Response</span>
+                <span id="reg-status" class="status-tag"></span>
+              </div>
+              <pre id="reg-response">// Response will appear here...</pre>
+            </div>
+          </div>
         </div>
-        <div class="endpoint">
-          <span class="method post">POST</span>
-          <span class="path">/auth/login</span>
-          <span class="description">Authenticate & receive JWT tokens</span>
+      </div>
+    </div>
+
+    <!-- LOGIN PANEL -->
+    <div id="panel-login" class="panel">
+      <div class="card">
+        <h2>Login & Get Tokens</h2>
+        <p class="desc">Authenticate with your credentials. You'll receive a short-lived access token and a long-lived refresh token.</p>
+        <div class="two-col">
+          <div>
+            <div class="form-group">
+              <label>Email Address</label>
+              <input type="email" id="login-email" placeholder="you@example.com" value="demo@example.com" />
+            </div>
+            <div class="form-group">
+              <label>Password</label>
+              <input type="password" id="login-password" placeholder="your password" value="demo1234" />
+            </div>
+            <button class="btn" id="login-btn" onclick="doLogin()">Login</button>
+          </div>
+          <div>
+            <div class="response-box">
+              <div class="response-header">
+                <span>API Response</span>
+                <span id="login-status" class="status-tag"></span>
+              </div>
+              <pre id="login-response">// Response will appear here...</pre>
+            </div>
+          </div>
         </div>
-        <div class="endpoint">
-          <span class="method get">GET</span>
-          <span class="path">/auth/profile</span>
-          <span class="description">Retrieve protected user details</span>
+        <div id="token-display" style="display:none; margin-top:1.5rem;">
+          <div class="success-box">✅ <strong>Tokens saved to session!</strong> You can now test the Profile and Refresh Token tabs.</div>
         </div>
-        <div class="endpoint">
-          <span class="method post">POST</span>
-          <span class="path">/auth/refresh-token</span>
-          <span class="description">Generate new access token via refresh token</span>
+      </div>
+    </div>
+
+    <!-- PROFILE PANEL -->
+    <div id="panel-profile" class="panel">
+      <div class="card">
+        <h2>👤 Protected Route: Profile</h2>
+        <p class="desc">This endpoint requires a valid JWT access token. Login first to get a token, or paste one manually.</p>
+        <div class="form-group">
+          <label>Bearer Token (auto-filled after login)</label>
+          <input type="text" id="profile-token" placeholder="Paste your access token here, or login first..." />
         </div>
-        <div class="endpoint">
-          <span class="method get">GET</span>
-          <span class="path">/auth/login-history</span>
-          <span class="description">View security and login event logs</span>
+        <button class="btn" onclick="doProfile()">Fetch My Profile</button>
+
+        <div class="response-box">
+          <div class="response-header">
+            <span>API Response</span>
+            <span id="profile-status" class="status-tag"></span>
+          </div>
+          <pre id="profile-response">// Login first, then click "Fetch My Profile"...</pre>
         </div>
-        <div class="endpoint">
-          <span class="method post">POST</span>
-          <span class="path">/auth/logout</span>
-          <span class="description">Invalidate current sessions</span>
+      </div>
+    </div>
+
+    <!-- REFRESH TOKEN PANEL -->
+    <div id="panel-refresh" class="panel">
+      <div class="card">
+        <h2>🔄 Refresh Access Token</h2>
+        <p class="desc">Use your refresh token to generate a brand new access token without logging in again. This is the core of secure JWT rotation.</p>
+        <div class="form-group">
+          <label>Refresh Token (auto-filled after login)</label>
+          <input type="text" id="refresh-token-input" placeholder="Paste your refresh token here, or login first..." />
+        </div>
+        <button class="btn" onclick="doRefresh()">Get New Access Token</button>
+
+        <div class="response-box">
+          <div class="response-header">
+            <span>API Response</span>
+            <span id="refresh-status" class="status-tag"></span>
+          </div>
+          <pre id="refresh-response">// Login first, then click "Get New Access Token"...</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- ENDPOINTS PANEL -->
+    <div id="panel-endpoints" class="panel">
+      <div class="card">
+        <h2>All API Endpoints</h2>
+        <p class="desc">Full list of available routes. 🔒 means a valid JWT is required in the Authorization header.</p>
+        <br/>
+        <div class="endpoint-item">
+          <span class="method-tag tag-post">POST</span>
+          <span class="ep-path">/auth/register</span>
+          <span class="ep-desc">Create a new user account</span>
+        </div>
+        <div class="endpoint-item">
+          <span class="method-tag tag-post">POST</span>
+          <span class="ep-path">/auth/login</span>
+          <span class="ep-desc">Authenticate & receive JWT tokens</span>
+        </div>
+        <div class="endpoint-item">
+          <span class="method-tag tag-post">POST</span>
+          <span class="ep-path">/auth/refresh-token</span>
+          <span class="ep-desc">Generate new access token via refresh</span>
+        </div>
+        <div class="endpoint-item">
+          <span class="method-tag tag-get">GET</span>
+          <span class="ep-path">/auth/profile</span>
+          <span class="ep-desc">Get user profile <span class="lock-icon">🔒</span></span>
+        </div>
+        <div class="endpoint-item">
+          <span class="method-tag tag-get">GET</span>
+          <span class="ep-path">/auth/login-history</span>
+          <span class="ep-desc">View login activity logs <span class="lock-icon">🔒</span></span>
+        </div>
+        <div class="endpoint-item">
+          <span class="method-tag tag-post">POST</span>
+          <span class="ep-path">/auth/logout</span>
+          <span class="ep-desc">Invalidate current session <span class="lock-icon">🔒</span></span>
+        </div>
+        <div class="endpoint-item">
+          <span class="method-tag tag-get">GET</span>
+          <span class="ep-path">/auth/admin-only</span>
+          <span class="ep-desc">Admin RBAC demo route <span class="lock-icon">🔒 admin</span></span>
         </div>
       </div>
     </div>
   </div>
+
+  <script>
+    const BASE = window.location.origin;
+    let sessionAccessToken = '';
+    let sessionRefreshToken = '';
+
+    function switchTab(name) {
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('panel-' + name).classList.add('active');
+      event.target.classList.add('active');
+    }
+
+    function setStatus(id, code) {
+      const el = document.getElementById(id);
+      el.className = 'status-tag';
+      if (code >= 200 && code < 300) { el.textContent = code + ' OK'; el.classList.add('status-ok'); }
+      else if (code === 0) { el.textContent = 'Network Error'; el.classList.add('status-err'); }
+      else { el.textContent = code + ' Error'; el.classList.add('status-err'); }
+    }
+
+    function setLoading(btnId, loading) {
+      const btn = document.getElementById(btnId);
+      btn.disabled = loading;
+      btn.classList.toggle('loading', loading);
+    }
+
+    async function doRegister() {
+      const email = document.getElementById('reg-email').value;
+      const password = document.getElementById('reg-password').value;
+      setLoading('reg-btn', true);
+      try {
+        const res = await fetch(BASE + '/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        setStatus('reg-status', res.status);
+        document.getElementById('reg-response').textContent = JSON.stringify(data, null, 2);
+        if (data.accessToken) {
+          sessionAccessToken = data.accessToken;
+          sessionRefreshToken = data.refreshToken;
+          document.getElementById('profile-token').value = sessionAccessToken;
+          document.getElementById('refresh-token-input').value = sessionRefreshToken;
+        }
+      } catch(e) {
+        setStatus('reg-status', 0);
+        document.getElementById('reg-response').textContent = 'Error: ' + e.message;
+      }
+      setLoading('reg-btn', false);
+    }
+
+    async function doLogin() {
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+      setLoading('login-btn', true);
+      try {
+        const res = await fetch(BASE + '/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        setStatus('login-status', res.status);
+        document.getElementById('login-response').textContent = JSON.stringify(data, null, 2);
+        if (data.accessToken) {
+          sessionAccessToken = data.accessToken;
+          sessionRefreshToken = data.refreshToken;
+          document.getElementById('profile-token').value = sessionAccessToken;
+          document.getElementById('refresh-token-input').value = sessionRefreshToken;
+          document.getElementById('token-display').style.display = 'block';
+        }
+      } catch(e) {
+        setStatus('login-status', 0);
+        document.getElementById('login-response').textContent = 'Error: ' + e.message;
+      }
+      setLoading('login-btn', false);
+    }
+
+    async function doProfile() {
+      const token = document.getElementById('profile-token').value;
+      try {
+        const res = await fetch(BASE + '/auth/profile', {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        const data = await res.json();
+        setStatus('profile-status', res.status);
+        document.getElementById('profile-response').textContent = JSON.stringify(data, null, 2);
+      } catch(e) {
+        setStatus('profile-status', 0);
+        document.getElementById('profile-response').textContent = 'Error: ' + e.message;
+      }
+    }
+
+    async function doRefresh() {
+      const refreshToken = document.getElementById('refresh-token-input').value;
+      try {
+        const res = await fetch(BASE + '/auth/refresh-token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refreshToken })
+        });
+        const data = await res.json();
+        setStatus('refresh-status', res.status);
+        document.getElementById('refresh-response').textContent = JSON.stringify(data, null, 2);
+        if (data.accessToken) {
+          sessionAccessToken = data.accessToken;
+          document.getElementById('profile-token').value = data.accessToken;
+        }
+      } catch(e) {
+        setStatus('refresh-status', 0);
+        document.getElementById('refresh-response').textContent = 'Error: ' + e.message;
+      }
+    }
+  </script>
 </body>
 </html>
