@@ -3,460 +3,453 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>JWT Authentication Server — Live Demo</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <title>JWT Authentication Server — Live Interactive Demo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --bg: #0f172a;
-      --surface: rgba(255,255,255,0.05);
-      --border: rgba(255,255,255,0.1);
-      --primary: #8b5cf6;
-      --primary-glow: rgba(139,92,246,0.3);
-      --blue: #3b82f6;
-      --green: #10b981;
-      --red: #ef4444;
-      --text: #f8fafc;
-      --muted: #94a3b8;
-      --card-shadow: 0 25px 50px -12px rgba(0,0,0,0.6);
-    }
-
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       font-family: 'Inter', sans-serif;
-      background: var(--bg);
-      color: var(--text);
+      background: #050a18;
+      color: #e2e8f0;
       min-height: 100vh;
       overflow-x: hidden;
     }
 
-    /* BACKGROUND */
-    .bg-orb {
-      position: fixed;
-      border-radius: 50%;
-      filter: blur(120px);
-      pointer-events: none;
-      z-index: 0;
+    /* === ANIMATED BACKGROUND === */
+    .bg-grid {
+      position: fixed; inset: 0; z-index: 0;
+      background-image:
+        linear-gradient(rgba(139,92,246,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(139,92,246,0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
     }
-    .orb1 { top: -150px; left: -100px; width: 500px; height: 500px; background: rgba(139,92,246,0.25); animation: drift 12s ease-in-out infinite alternate; }
-    .orb2 { bottom: -100px; right: -100px; width: 600px; height: 600px; background: rgba(59,130,246,0.15); animation: drift 15s ease-in-out infinite alternate-reverse; }
-    @keyframes drift { from { transform: translate(0,0); } to { transform: translate(40px, 40px); } }
+    .bg-glow {
+      position: fixed; border-radius: 50%; filter: blur(140px); pointer-events: none; z-index: 0;
+    }
+    .glow1 { top: -200px; left: -100px; width: 600px; height: 600px; background: rgba(139,92,246,0.15); animation: glow-drift 14s ease-in-out infinite alternate; }
+    .glow2 { bottom: -200px; right: -150px; width: 700px; height: 700px; background: rgba(59,130,246,0.1); animation: glow-drift 18s ease-in-out infinite alternate-reverse; }
+    .glow3 { top: 50%; left: 50%; transform: translate(-50%,-50%); width: 400px; height: 400px; background: rgba(236,72,153,0.06); animation: glow-drift 10s ease-in-out infinite alternate; }
+    @keyframes glow-drift { from { transform: translate(0,0) scale(1); } to { transform: translate(30px,40px) scale(1.15); } }
 
-    /* LAYOUT */
-    .page { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 3rem 1.5rem 5rem; }
+    /* === LAYOUT === */
+    .page { position: relative; z-index: 1; max-width: 720px; margin: 0 auto; padding: 3rem 1.25rem 5rem; }
 
-    /* HERO */
-    .hero { text-align: center; margin-bottom: 3.5rem; animation: slideDown 0.8s ease-out; }
-    @keyframes slideDown { from { opacity:0; transform:translateY(-25px); } to { opacity:1; transform:translateY(0); } }
+    /* === HERO === */
+    .hero { text-align: center; margin-bottom: 3rem; animation: hero-in 1s ease-out; }
+    @keyframes hero-in { from { opacity:0; transform:translateY(-30px); } to { opacity:1; transform:translateY(0); } }
 
-    .badge {
-      display: inline-flex; align-items: center; gap: 0.5rem;
-      background: rgba(16,185,129,0.1); color: #34d399;
-      border: 1px solid rgba(16,185,129,0.25); border-radius: 9999px;
-      padding: 0.4rem 1rem; font-size: 0.85rem; font-weight: 600;
+    .server-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2);
+      border-radius: 999px; padding: 6px 16px;
+      font-size: 0.8rem; font-weight: 600; color: #34d399;
       margin-bottom: 1.5rem;
     }
-    .pulse { width: 8px; height: 8px; background: #34d399; border-radius: 50%; animation: pulse 2s infinite; }
-    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(52,211,153,0.7); } 70% { box-shadow: 0 0 0 8px rgba(52,211,153,0); } 100% { box-shadow: 0 0 0 0 rgba(52,211,153,0); } }
+    .dot { width: 8px; height: 8px; background: #34d399; border-radius: 50%; box-shadow: 0 0 12px #34d399; animation: dot-pulse 2s infinite; }
+    @keyframes dot-pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
 
-    h1 { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 800; letter-spacing: -1px; background: linear-gradient(135deg, #c084fc, #60a5fa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 1rem; }
-    .hero p { color: var(--muted); font-size: 1.1rem; line-height: 1.7; max-width: 600px; margin: 0 auto 1.5rem; }
-
-    .pills { display: flex; flex-wrap: wrap; gap: 0.6rem; justify-content: center; }
-    .pill { background: var(--surface); border: 1px solid var(--border); border-radius: 9999px; padding: 0.35rem 1rem; font-size: 0.85rem; color: var(--muted); }
-
-    /* TABS */
-    .tabs { display: flex; gap: 0.5rem; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 6px; margin-bottom: 1.5rem; overflow-x: auto; }
-    .tab-btn {
-      flex: 1; min-width: fit-content; padding: 0.6rem 1.2rem; border-radius: 10px;
-      border: none; background: none; color: var(--muted);
-      font-family: inherit; font-size: 0.9rem; font-weight: 600;
-      cursor: pointer; transition: all 0.2s; white-space: nowrap;
+    .hero h1 {
+      font-size: clamp(2.2rem, 6vw, 3.2rem); font-weight: 900; letter-spacing: -1.5px; line-height: 1.1;
+      background: linear-gradient(135deg, #c084fc 0%, #818cf8 40%, #60a5fa 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      margin-bottom: 1rem;
     }
-    .tab-btn.active { background: var(--primary); color: #fff; box-shadow: 0 0 20px var(--primary-glow); }
-    .tab-btn:hover:not(.active) { color: var(--text); background: rgba(255,255,255,0.05); }
+    .hero p { color: #94a3b8; font-size: 1.05rem; line-height: 1.7; max-width: 520px; margin: 0 auto 1.5rem; }
 
-    /* PANEL */
-    .panel { display: none; animation: fadeIn 0.4s ease-out; }
+    .tech-row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+    .tech-chip {
+      font-size: 0.78rem; font-weight: 600; padding: 5px 14px; border-radius: 8px;
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: #94a3b8;
+      transition: all 0.2s;
+    }
+    .tech-chip:hover { border-color: rgba(139,92,246,0.4); color: #c4b5fd; background: rgba(139,92,246,0.08); }
+
+    /* === TABS === */
+    .tab-bar {
+      display: flex; gap: 4px; background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06); border-radius: 14px;
+      padding: 5px; margin-bottom: 1.5rem; overflow-x: auto;
+    }
+    .tab {
+      flex: 1; min-width: max-content; padding: 10px 14px; border-radius: 10px;
+      border: none; background: none; color: #64748b;
+      font-family: inherit; font-size: 0.82rem; font-weight: 600;
+      cursor: pointer; transition: all 0.25s; white-space: nowrap;
+    }
+    .tab:hover { color: #cbd5e1; background: rgba(255,255,255,0.04); }
+    .tab.active {
+      background: linear-gradient(135deg, #7c3aed, #6366f1);
+      color: #fff; box-shadow: 0 4px 20px rgba(124,58,237,0.35);
+    }
+
+    /* === PANELS === */
+    .panel { display: none; animation: panel-in 0.4s ease-out; }
     .panel.active { display: block; }
-    @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes panel-in { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
 
-    /* CARD */
+    /* === CARD === */
     .card {
-      background: var(--surface); backdrop-filter: blur(20px);
-      border: 1px solid var(--border); border-radius: 20px;
-      padding: 2rem; box-shadow: var(--card-shadow);
+      background: rgba(255,255,255,0.025);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 20px; padding: 2rem;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
       transition: border-color 0.3s;
     }
-    .card:hover { border-color: rgba(255,255,255,0.18); }
-    .card h2 { font-size: 1.25rem; margin-bottom: 0.4rem; }
-    .card .desc { color: var(--muted); font-size: 0.9rem; margin-bottom: 1.5rem; }
+    .card:hover { border-color: rgba(255,255,255,0.12); }
+    .card-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 6px; color: #f1f5f9; }
+    .card-desc { color: #64748b; font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.5rem; }
 
-    /* FORM */
-    .form-group { margin-bottom: 1rem; }
-    label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--muted); margin-bottom: 0.4rem; }
-    input, select {
-      width: 100%; padding: 0.75rem 1rem;
-      background: rgba(0,0,0,0.3); border: 1px solid var(--border);
-      border-radius: 10px; color: var(--text);
-      font-family: inherit; font-size: 0.95rem;
-      transition: border-color 0.2s, box-shadow 0.2s; outline: none;
+    /* === FORM === */
+    .field { margin-bottom: 1rem; }
+    .field label { display: block; font-size: 0.8rem; font-weight: 600; color: #64748b; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .field input {
+      width: 100%; padding: 12px 16px;
+      background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px; color: #f1f5f9;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.9rem;
+      outline: none; transition: all 0.2s;
     }
-    input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-glow); }
+    .field input:focus { border-color: #7c3aed; box-shadow: 0 0 0 3px rgba(124,58,237,0.2); }
+    .field input::placeholder { color: #475569; }
 
-    /* BUTTON */
-    .btn {
-      width: 100%; padding: 0.85rem;
-      background: linear-gradient(135deg, var(--primary), var(--blue));
-      border: none; border-radius: 10px; color: #fff;
-      font-family: inherit; font-size: 1rem; font-weight: 700;
-      cursor: pointer; transition: all 0.2s; margin-top: 0.5rem;
+    /* === BUTTON === */
+    .btn-primary {
+      width: 100%; padding: 14px; margin-top: 4px;
+      background: linear-gradient(135deg, #7c3aed, #4f46e5);
+      border: none; border-radius: 12px; color: #fff;
+      font-family: inherit; font-size: 0.95rem; font-weight: 700;
+      cursor: pointer; transition: all 0.25s;
       position: relative; overflow: hidden;
     }
-    .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 30px var(--primary-glow); }
-    .btn:active { transform: translateY(0); }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-    .btn.loading::after { content: ''; position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; }
-    @keyframes spin { to { transform: translateY(-50%) rotate(360deg); } }
-
-    .btn-secondary {
-      background: var(--surface); border: 1px solid var(--border);
-      color: var(--text);
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(124,58,237,0.4); }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .btn-primary.loading { color: transparent; }
+    .btn-primary.loading::after {
+      content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+      width: 20px; height: 20px; border: 2.5px solid rgba(255,255,255,0.3);
+      border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite;
     }
-    .btn-secondary:hover { background: rgba(255,255,255,0.1); box-shadow: none; }
+    @keyframes spin { to { transform: translate(-50%,-50%) rotate(360deg); } }
 
-    /* RESPONSE BOX */
-    .response-box { margin-top: 1.5rem; }
-    .response-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.6rem; }
-    .response-header span { font-size: 0.85rem; font-weight: 600; color: var(--muted); }
-    .status-tag { padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.8rem; font-weight: 700; }
-    .status-ok { background: rgba(16,185,129,0.2); color: #34d399; }
-    .status-err { background: rgba(239,68,68,0.2); color: #f87171; }
-    .status-warn { background: rgba(245,158,11,0.2); color: #fbbf24; }
+    /* === DIVIDER === */
+    .divider { height: 1px; background: rgba(255,255,255,0.06); margin: 1.5rem 0; }
 
-    pre {
-      background: rgba(0,0,0,0.4); border: 1px solid var(--border);
-      border-radius: 12px; padding: 1.2rem; overflow-x: auto;
-      font-size: 0.85rem; line-height: 1.6; color: #e2e8f0;
-      max-height: 320px; overflow-y: auto;
+    /* === RESPONSE === */
+    .res-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .res-label { font-size: 0.78rem; font-weight: 600; color: #475569; text-transform: uppercase; letter-spacing: 0.8px; }
+    .status {
+      font-size: 0.75rem; font-weight: 700; padding: 3px 10px; border-radius: 6px;
     }
-    .token-display { word-break: break-all; color: #a78bfa; font-family: monospace; font-size: 0.8rem; }
+    .s-ok { background: rgba(16,185,129,0.15); color: #34d399; }
+    .s-err { background: rgba(239,68,68,0.15); color: #f87171; }
 
-    /* INFO BOX */
-    .info-box { background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2); border-radius: 12px; padding: 1rem; margin-bottom: 1.5rem; font-size: 0.875rem; color: #93c5fd; line-height: 1.6; }
-    .success-box { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.2); border-radius: 12px; padding: 1rem; margin-bottom: 1.5rem; font-size: 0.875rem; color: #6ee7b7; line-height: 1.6; }
-
-    /* TWO COL */
-    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
-    @media (max-width: 640px) { .two-col { grid-template-columns: 1fr; } }
-
-    /* ENDPOINTS LIST */
-    .endpoint-item {
-      display: flex; align-items: center; gap: 1rem;
-      background: rgba(0,0,0,0.2); padding: 0.9rem 1.1rem;
-      border-radius: 12px; border: 1px solid var(--border);
-      margin-bottom: 0.75rem; transition: all 0.2s;
+    pre.response {
+      background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 14px; padding: 1.25rem; overflow-x: auto;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; line-height: 1.7;
+      color: #a5b4fc; max-height: 300px; overflow-y: auto;
+      scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.1) transparent;
     }
-    .endpoint-item:hover { background: rgba(255,255,255,0.05); }
-    .method-tag { font-weight: 700; font-size: 0.8rem; padding: 0.2rem 0.7rem; border-radius: 6px; min-width: 52px; text-align: center; }
-    .tag-post { background: rgba(59,130,246,0.2); color: #60a5fa; }
-    .tag-get { background: rgba(16,185,129,0.2); color: #34d399; }
-    .ep-path { font-family: monospace; font-size: 0.95rem; flex: 1; }
-    .ep-desc { font-size: 0.85rem; color: var(--muted); }
-    .lock-icon { font-size: 0.8rem; color: #fbbf24; }
+
+    .token-saved {
+      display: none; margin-top: 1rem; padding: 12px 16px;
+      background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2);
+      border-radius: 12px; font-size: 0.85rem; color: #6ee7b7; line-height: 1.5;
+    }
+
+    /* === ENDPOINT LIST === */
+    .ep-item {
+      display: flex; align-items: center; gap: 12px;
+      background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 12px; padding: 12px 16px; margin-bottom: 8px;
+      transition: all 0.2s;
+    }
+    .ep-item:hover { background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.1); }
+    .m-tag { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; font-weight: 700; padding: 3px 10px; border-radius: 6px; min-width: 48px; text-align: center; }
+    .m-post { background: rgba(99,102,241,0.15); color: #a5b4fc; }
+    .m-get { background: rgba(16,185,129,0.15); color: #6ee7b7; }
+    .ep-path { font-family: 'JetBrains Mono', monospace; font-size: 0.88rem; color: #e2e8f0; flex: 1; }
+    .ep-desc { font-size: 0.8rem; color: #475569; }
+    .lock { color: #fbbf24; font-size: 0.75rem; }
+
+    /* === RESPONSIVE === */
+    @media (max-width: 500px) {
+      .page { padding: 2rem 1rem 4rem; }
+      .card { padding: 1.5rem; }
+      .tab { font-size: 0.75rem; padding: 8px 10px; }
+      .ep-desc { display: none; }
+    }
   </style>
 </head>
 <body>
-  <div class="bg-orb orb1"></div>
-  <div class="bg-orb orb2"></div>
+  <div class="bg-grid"></div>
+  <div class="bg-glow glow1"></div>
+  <div class="bg-glow glow2"></div>
+  <div class="bg-glow glow3"></div>
 
   <div class="page">
     <!-- HERO -->
     <div class="hero">
-      <div class="badge"><div class="pulse"></div> Server Online</div>
+      <div class="server-badge"><div class="dot"></div> Server Online</div>
       <h1>JWT Auth Server</h1>
-      <p>Enterprise-grade authentication API. Test register, login, token refresh and protected routes live below.</p>
-      <div class="pills">
-        <span class="pill">Node.js</span>
-        <span class="pill">Express</span>
-        <span class="pill">MongoDB</span>
-        <span class="pill">JWT</span>
-        <span class="pill">Bcrypt</span>
-        <span class="pill">RBAC</span>
+      <p>Enterprise-grade authentication API with JWT rotation, rate limiting, and RBAC. Test every endpoint live below.</p>
+      <div class="tech-row">
+        <span class="tech-chip">Node.js</span>
+        <span class="tech-chip">Express</span>
+        <span class="tech-chip">MongoDB</span>
+        <span class="tech-chip">JWT</span>
+        <span class="tech-chip">Bcrypt</span>
+        <span class="tech-chip">RBAC</span>
       </div>
     </div>
 
     <!-- TABS -->
-    <div class="tabs">
-      <button class="tab-btn active" onclick="switchTab('register')">📝 Register</button>
-      <button class="tab-btn" onclick="switchTab('login')">🔐 Login</button>
-      <button class="tab-btn" onclick="switchTab('profile')">👤 Profile</button>
-      <button class="tab-btn" onclick="switchTab('refresh')">🔄 Refresh Token</button>
-      <button class="tab-btn" onclick="switchTab('endpoints')">📋 Endpoints</button>
+    <div class="tab-bar">
+      <button class="tab active" onclick="switchTab('register', this)">📝 Register</button>
+      <button class="tab" onclick="switchTab('login', this)">🔐 Login</button>
+      <button class="tab" onclick="switchTab('profile', this)">👤 Profile</button>
+      <button class="tab" onclick="switchTab('refresh', this)">🔄 Refresh</button>
+      <button class="tab" onclick="switchTab('endpoints', this)">📋 Endpoints</button>
     </div>
 
-    <!-- REGISTER PANEL -->
-    <div id="panel-register" class="panel active">
+    <!-- REGISTER -->
+    <div id="p-register" class="panel active">
       <div class="card">
-        <h2>Create an Account</h2>
-        <p class="desc">Register a new user. Your password is hashed with bcrypt before being saved.</p>
-        <div class="two-col">
-          <div>
-            <div class="form-group">
-              <label>Email Address</label>
-              <input type="email" id="reg-email" placeholder="you@example.com" value="demo@example.com" />
-            </div>
-            <div class="form-group">
-              <label>Password</label>
-              <input type="password" id="reg-password" placeholder="min 6 characters" value="demo1234" />
-            </div>
-            <button class="btn" id="reg-btn" onclick="doRegister()">Register User</button>
-          </div>
-          <div>
-            <div class="response-box">
-              <div class="response-header">
-                <span>API Response</span>
-                <span id="reg-status" class="status-tag"></span>
-              </div>
-              <pre id="reg-response">// Response will appear here...</pre>
-            </div>
-          </div>
+        <div class="card-title">Create Account</div>
+        <div class="card-desc">Register a new user. Passwords are hashed with bcrypt before storage.</div>
+        <div class="field">
+          <label>Email</label>
+          <input type="email" id="r-email" placeholder="you@example.com" value="demo@jwtauth.com" />
         </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" id="r-pass" placeholder="min 6 characters" value="demo1234" />
+        </div>
+        <button class="btn-primary" id="r-btn" onclick="doRegister()">Register User →</button>
+        <div class="divider"></div>
+        <div class="res-header">
+          <span class="res-label">Response</span>
+          <span id="r-st" class="status"></span>
+        </div>
+        <pre class="response" id="r-res">// Click "Register User" to create an account...</pre>
+        <div class="token-saved" id="r-saved">✅ Tokens auto-saved — switch to Profile or Refresh tab to continue testing!</div>
       </div>
     </div>
 
-    <!-- LOGIN PANEL -->
-    <div id="panel-login" class="panel">
+    <!-- LOGIN -->
+    <div id="p-login" class="panel">
       <div class="card">
-        <h2>Login & Get Tokens</h2>
-        <p class="desc">Authenticate with your credentials. You'll receive a short-lived access token and a long-lived refresh token.</p>
-        <div class="two-col">
-          <div>
-            <div class="form-group">
-              <label>Email Address</label>
-              <input type="email" id="login-email" placeholder="you@example.com" value="demo@example.com" />
-            </div>
-            <div class="form-group">
-              <label>Password</label>
-              <input type="password" id="login-password" placeholder="your password" value="demo1234" />
-            </div>
-            <button class="btn" id="login-btn" onclick="doLogin()">Login</button>
-          </div>
-          <div>
-            <div class="response-box">
-              <div class="response-header">
-                <span>API Response</span>
-                <span id="login-status" class="status-tag"></span>
-              </div>
-              <pre id="login-response">// Response will appear here...</pre>
-            </div>
-          </div>
+        <div class="card-title">Authenticate</div>
+        <div class="card-desc">Login with your credentials to receive a short-lived access token and a long-lived refresh token.</div>
+        <div class="field">
+          <label>Email</label>
+          <input type="email" id="l-email" placeholder="you@example.com" value="demo@jwtauth.com" />
         </div>
-        <div id="token-display" style="display:none; margin-top:1.5rem;">
-          <div class="success-box">✅ <strong>Tokens saved to session!</strong> You can now test the Profile and Refresh Token tabs.</div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" id="l-pass" placeholder="your password" value="demo1234" />
         </div>
+        <button class="btn-primary" id="l-btn" onclick="doLogin()">Login →</button>
+        <div class="divider"></div>
+        <div class="res-header">
+          <span class="res-label">Response</span>
+          <span id="l-st" class="status"></span>
+        </div>
+        <pre class="response" id="l-res">// Click "Login" to authenticate...</pre>
+        <div class="token-saved" id="l-saved">✅ Tokens auto-saved — switch to Profile or Refresh tab to continue testing!</div>
       </div>
     </div>
 
-    <!-- PROFILE PANEL -->
-    <div id="panel-profile" class="panel">
+    <!-- PROFILE -->
+    <div id="p-profile" class="panel">
       <div class="card">
-        <h2>👤 Protected Route: Profile</h2>
-        <p class="desc">This endpoint requires a valid JWT access token. Login first to get a token, or paste one manually.</p>
-        <div class="form-group">
-          <label>Bearer Token (auto-filled after login)</label>
-          <input type="text" id="profile-token" placeholder="Paste your access token here, or login first..." />
+        <div class="card-title">🔒 Protected Route: Profile</div>
+        <div class="card-desc">This endpoint requires a valid JWT in the Authorization header. Register or login first to get a token, or paste one manually.</div>
+        <div class="field">
+          <label>Bearer Token</label>
+          <input type="text" id="pf-token" placeholder="Login first to auto-fill this..." />
         </div>
-        <button class="btn" onclick="doProfile()">Fetch My Profile</button>
-
-        <div class="response-box">
-          <div class="response-header">
-            <span>API Response</span>
-            <span id="profile-status" class="status-tag"></span>
-          </div>
-          <pre id="profile-response">// Login first, then click "Fetch My Profile"...</pre>
+        <button class="btn-primary" onclick="doProfile()">Fetch My Profile →</button>
+        <div class="divider"></div>
+        <div class="res-header">
+          <span class="res-label">Response</span>
+          <span id="pf-st" class="status"></span>
         </div>
+        <pre class="response" id="pf-res">// Your protected user data will appear here...</pre>
       </div>
     </div>
 
-    <!-- REFRESH TOKEN PANEL -->
-    <div id="panel-refresh" class="panel">
+    <!-- REFRESH -->
+    <div id="p-refresh" class="panel">
       <div class="card">
-        <h2>🔄 Refresh Access Token</h2>
-        <p class="desc">Use your refresh token to generate a brand new access token without logging in again. This is the core of secure JWT rotation.</p>
-        <div class="form-group">
-          <label>Refresh Token (auto-filled after login)</label>
-          <input type="text" id="refresh-token-input" placeholder="Paste your refresh token here, or login first..." />
+        <div class="card-title">🔄 Token Rotation</div>
+        <div class="card-desc">Use your refresh token to get a brand new access token without re-entering credentials. This is the core of secure JWT lifecycle management.</div>
+        <div class="field">
+          <label>Refresh Token</label>
+          <input type="text" id="rf-token" placeholder="Login first to auto-fill this..." />
         </div>
-        <button class="btn" onclick="doRefresh()">Get New Access Token</button>
-
-        <div class="response-box">
-          <div class="response-header">
-            <span>API Response</span>
-            <span id="refresh-status" class="status-tag"></span>
-          </div>
-          <pre id="refresh-response">// Login first, then click "Get New Access Token"...</pre>
+        <button class="btn-primary" onclick="doRefresh()">Get New Access Token →</button>
+        <div class="divider"></div>
+        <div class="res-header">
+          <span class="res-label">Response</span>
+          <span id="rf-st" class="status"></span>
         </div>
+        <pre class="response" id="rf-res">// Your new rotated access token will appear here...</pre>
       </div>
     </div>
 
-    <!-- ENDPOINTS PANEL -->
-    <div id="panel-endpoints" class="panel">
+    <!-- ENDPOINTS -->
+    <div id="p-endpoints" class="panel">
       <div class="card">
-        <h2>All API Endpoints</h2>
-        <p class="desc">Full list of available routes. 🔒 means a valid JWT is required in the Authorization header.</p>
-        <br/>
-        <div class="endpoint-item">
-          <span class="method-tag tag-post">POST</span>
+        <div class="card-title">API Reference</div>
+        <div class="card-desc">All available routes. <span class="lock">🔒</span> = requires JWT Bearer token.</div>
+        <div class="ep-item">
+          <span class="m-tag m-post">POST</span>
           <span class="ep-path">/auth/register</span>
-          <span class="ep-desc">Create a new user account</span>
+          <span class="ep-desc">Create account</span>
         </div>
-        <div class="endpoint-item">
-          <span class="method-tag tag-post">POST</span>
+        <div class="ep-item">
+          <span class="m-tag m-post">POST</span>
           <span class="ep-path">/auth/login</span>
-          <span class="ep-desc">Authenticate & receive JWT tokens</span>
+          <span class="ep-desc">Get tokens</span>
         </div>
-        <div class="endpoint-item">
-          <span class="method-tag tag-post">POST</span>
+        <div class="ep-item">
+          <span class="m-tag m-post">POST</span>
           <span class="ep-path">/auth/refresh-token</span>
-          <span class="ep-desc">Generate new access token via refresh</span>
+          <span class="ep-desc">Rotate access token</span>
         </div>
-        <div class="endpoint-item">
-          <span class="method-tag tag-get">GET</span>
+        <div class="ep-item">
+          <span class="m-tag m-get">GET</span>
           <span class="ep-path">/auth/profile</span>
-          <span class="ep-desc">Get user profile <span class="lock-icon">🔒</span></span>
+          <span class="ep-desc">User data <span class="lock">🔒</span></span>
         </div>
-        <div class="endpoint-item">
-          <span class="method-tag tag-get">GET</span>
+        <div class="ep-item">
+          <span class="m-tag m-get">GET</span>
           <span class="ep-path">/auth/login-history</span>
-          <span class="ep-desc">View login activity logs <span class="lock-icon">🔒</span></span>
+          <span class="ep-desc">Audit logs <span class="lock">🔒</span></span>
         </div>
-        <div class="endpoint-item">
-          <span class="method-tag tag-post">POST</span>
+        <div class="ep-item">
+          <span class="m-tag m-post">POST</span>
           <span class="ep-path">/auth/logout</span>
-          <span class="ep-desc">Invalidate current session <span class="lock-icon">🔒</span></span>
+          <span class="ep-desc">End session <span class="lock">🔒</span></span>
         </div>
-        <div class="endpoint-item">
-          <span class="method-tag tag-get">GET</span>
+        <div class="ep-item">
+          <span class="m-tag m-get">GET</span>
           <span class="ep-path">/auth/admin-only</span>
-          <span class="ep-desc">Admin RBAC demo route <span class="lock-icon">🔒 admin</span></span>
+          <span class="ep-desc">RBAC demo <span class="lock">🔒 admin</span></span>
         </div>
       </div>
     </div>
   </div>
 
   <script>
-    const BASE = window.location.origin;
-    let sessionAccessToken = '';
-    let sessionRefreshToken = '';
+    const API = window.location.origin;
 
-    function switchTab(name) {
+    function switchTab(id, btn) {
       document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      document.getElementById('panel-' + name).classList.add('active');
-      event.target.classList.add('active');
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.getElementById('p-' + id).classList.add('active');
+      btn.classList.add('active');
     }
 
-    function setStatus(id, code) {
-      const el = document.getElementById(id);
-      el.className = 'status-tag';
-      if (code >= 200 && code < 300) { el.textContent = code + ' OK'; el.classList.add('status-ok'); }
-      else if (code === 0) { el.textContent = 'Network Error'; el.classList.add('status-err'); }
-      else { el.textContent = code + ' Error'; el.classList.add('status-err'); }
+    function badge(elId, code) {
+      const el = document.getElementById(elId);
+      if (code >= 200 && code < 300) { el.textContent = code; el.className = 'status s-ok'; }
+      else { el.textContent = code || 'ERR'; el.className = 'status s-err'; }
     }
 
-    function setLoading(btnId, loading) {
-      const btn = document.getElementById(btnId);
-      btn.disabled = loading;
-      btn.classList.toggle('loading', loading);
+    function loading(id, on) {
+      const b = document.getElementById(id);
+      b.disabled = on;
+      b.classList.toggle('loading', on);
     }
 
     async function doRegister() {
-      const email = document.getElementById('reg-email').value;
-      const password = document.getElementById('reg-password').value;
-      setLoading('reg-btn', true);
+      loading('r-btn', true);
       try {
-        const res = await fetch(BASE + '/auth/register', {
+        const res = await fetch(API + '/auth/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password })
+          body: JSON.stringify({
+            email: document.getElementById('r-email').value,
+            password: document.getElementById('r-pass').value
+          })
         });
         const data = await res.json();
-        setStatus('reg-status', res.status);
-        document.getElementById('reg-response').textContent = JSON.stringify(data, null, 2);
+        badge('r-st', res.status);
+        document.getElementById('r-res').textContent = JSON.stringify(data, null, 2);
         if (data.accessToken) {
-          sessionAccessToken = data.accessToken;
-          sessionRefreshToken = data.refreshToken;
-          document.getElementById('profile-token').value = sessionAccessToken;
-          document.getElementById('refresh-token-input').value = sessionRefreshToken;
+          document.getElementById('pf-token').value = data.accessToken;
+          document.getElementById('rf-token').value = data.refreshToken;
+          document.getElementById('r-saved').style.display = 'block';
         }
-      } catch(e) {
-        setStatus('reg-status', 0);
-        document.getElementById('reg-response').textContent = 'Error: ' + e.message;
+      } catch (e) {
+        badge('r-st', 0);
+        document.getElementById('r-res').textContent = 'Network error: ' + e.message;
       }
-      setLoading('reg-btn', false);
+      loading('r-btn', false);
     }
 
     async function doLogin() {
-      const email = document.getElementById('login-email').value;
-      const password = document.getElementById('login-password').value;
-      setLoading('login-btn', true);
+      loading('l-btn', true);
       try {
-        const res = await fetch(BASE + '/auth/login', {
+        const res = await fetch(API + '/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password })
+          body: JSON.stringify({
+            email: document.getElementById('l-email').value,
+            password: document.getElementById('l-pass').value
+          })
         });
         const data = await res.json();
-        setStatus('login-status', res.status);
-        document.getElementById('login-response').textContent = JSON.stringify(data, null, 2);
+        badge('l-st', res.status);
+        document.getElementById('l-res').textContent = JSON.stringify(data, null, 2);
         if (data.accessToken) {
-          sessionAccessToken = data.accessToken;
-          sessionRefreshToken = data.refreshToken;
-          document.getElementById('profile-token').value = sessionAccessToken;
-          document.getElementById('refresh-token-input').value = sessionRefreshToken;
-          document.getElementById('token-display').style.display = 'block';
+          document.getElementById('pf-token').value = data.accessToken;
+          document.getElementById('rf-token').value = data.refreshToken;
+          document.getElementById('l-saved').style.display = 'block';
         }
-      } catch(e) {
-        setStatus('login-status', 0);
-        document.getElementById('login-response').textContent = 'Error: ' + e.message;
+      } catch (e) {
+        badge('l-st', 0);
+        document.getElementById('l-res').textContent = 'Network error: ' + e.message;
       }
-      setLoading('login-btn', false);
+      loading('l-btn', false);
     }
 
     async function doProfile() {
-      const token = document.getElementById('profile-token').value;
+      const token = document.getElementById('pf-token').value;
       try {
-        const res = await fetch(BASE + '/auth/profile', {
+        const res = await fetch(API + '/auth/profile', {
           headers: { 'Authorization': 'Bearer ' + token }
         });
         const data = await res.json();
-        setStatus('profile-status', res.status);
-        document.getElementById('profile-response').textContent = JSON.stringify(data, null, 2);
-      } catch(e) {
-        setStatus('profile-status', 0);
-        document.getElementById('profile-response').textContent = 'Error: ' + e.message;
+        badge('pf-st', res.status);
+        document.getElementById('pf-res').textContent = JSON.stringify(data, null, 2);
+      } catch (e) {
+        badge('pf-st', 0);
+        document.getElementById('pf-res').textContent = 'Network error: ' + e.message;
       }
     }
 
     async function doRefresh() {
-      const refreshToken = document.getElementById('refresh-token-input').value;
+      const refreshToken = document.getElementById('rf-token').value;
       try {
-        const res = await fetch(BASE + '/auth/refresh-token', {
+        const res = await fetch(API + '/auth/refresh-token', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ refreshToken })
         });
         const data = await res.json();
-        setStatus('refresh-status', res.status);
-        document.getElementById('refresh-response').textContent = JSON.stringify(data, null, 2);
+        badge('rf-st', res.status);
+        document.getElementById('rf-res').textContent = JSON.stringify(data, null, 2);
         if (data.accessToken) {
-          sessionAccessToken = data.accessToken;
-          document.getElementById('profile-token').value = data.accessToken;
+          document.getElementById('pf-token').value = data.accessToken;
         }
-      } catch(e) {
-        setStatus('refresh-status', 0);
-        document.getElementById('refresh-response').textContent = 'Error: ' + e.message;
+      } catch (e) {
+        badge('rf-st', 0);
+        document.getElementById('rf-res').textContent = 'Network error: ' + e.message;
       }
     }
   </script>
